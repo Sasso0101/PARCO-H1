@@ -10,7 +10,7 @@ The repository contains the following files:
 |- main.pbs           : PBS script that runs all the implementations
 ```
 ### Reproducibility instructions
-Clone this repository to a local folder by using:
+Clone this repository to a local folder:
 ```bash 
 git clone https://github.com/Sasso0101/PARCO-H1.git
 ```
