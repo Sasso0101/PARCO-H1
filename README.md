@@ -1,5 +1,5 @@
 # PARCO-H1 Project
-Student: Salvatore Andaloro (mat. 234386, email: [salvatore.andaloro@studenti.unitn.it](mailto:salvatore.andaloro@studenti.unitn.it))
+Student: Salvatore Andaloro (email: [salvatore.andaloro@studenti.unitn.it](mailto:salvatore.andaloro@studenti.unitn.it))
 
 The repository contains the following files:
 ```
