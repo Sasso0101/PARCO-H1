@@ -10,8 +10,11 @@ The repository contains the following files:
 |- main.pbs           : PBS script that runs all the implementations
 ```
 ### Reproducibility instructions
-
-The results presented in the report can be reproduced by submitting the `main.pbs` file to the cluster using the following command:
+Clone this repository to a local folder by using:
+```bash 
+git clone https://github.com/Sasso0101/PARCO-H1.git
+```
+Then, submit the `main.pbs` file to the cluster using the following command:
 ```bash
 qsub -q short_cpuQ -v PATH_TO_DIRECTORY=/home/<username>/<path_to_project_directory> /home/<username>/<path_to_project_directory>/main.pbs
 ```
@@ -31,9 +34,9 @@ export PATH_TO_DIRECTORY=/home/<username>/<path_to_project_directory>
 The PBS job will reserve a node with 64 cores and 10GB of memory. Once started, it should take less than a minute to complete (if the number of runs was set to be one). When the job completes, the output of the bash script will be printed to the `stdout.o` file (located in the directory where the script is run from).
 
 The script performs the following operations:
-1. prints to the output file the original and transposed matrix for the sequential, cache-optimized and OpenMP code to verify their correctness;
-2. prints the system bandwidth given by `peak_bandwidth.c`(the code is run using 64 cores);
-3. runs the sequential and the cache-optimized implementations with the flag configurations that are presented in the report
+1. runs the sequential, cache-optimized and OpenMP code and prints the input and transposed matrix of each one of them to verify their correctness;
+2. prints the system bandwidth given by `peak_bandwidth.c` (the code is run in parallel using 64 cores to achieve the maximum bandwidth);
+3. runs the sequential and the cache-optimized implementations with the flag configurations that are presented in the report;
 4. runs the parallel implementation with 1, 2, 4, 8, 16, 32 and 64 cores.
 
 The data given by the runs is saved to the `results.csv` file (located in the `results` directory inside the project's directory). The csv file will contain a line for each run. The columns of the csv file are:
