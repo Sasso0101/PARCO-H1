@@ -22,7 +22,7 @@ To allow a quick completion of the script, each implementation will be run only 
 qsub -q short_cpuQ -v PATH_TO_DIRECTORY=/home/<username>/<path_to_project_directory>,RUNS=<number_of_runs> /home/<username>/<path_to_project_directory>/main.pbs
 ```
 
-Alternatively, the PBS file can be run as a regular bash script on any Linux machine with `gcc-9.1.0` installed and the openmp library and by specifying the `PATH_TO_DIRECTORY` environment variable using
+Alternatively, the PBS file can be run as a regular bash script on any Linux machine with `gcc-9.1.0` and the openmp library installed and by specifying the `PATH_TO_DIRECTORY` environment variable using
 ```bash
 export PATH_TO_DIRECTORY=/home/<username>/<path_to_project_directory>
 ```
