@@ -3,6 +3,7 @@
 #PBS -N PARCO_H1
 # Output files
 #PBS -o ./stdout.o
+#PBS -e ./stderr.e
 # Queue name
 #PBS -q short_cpuQ
 # Set the maximum wall time
