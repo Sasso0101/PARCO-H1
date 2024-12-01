@@ -1,0 +1,4 @@
+results*/
+bin/
+**/*.out
+.DS_Store

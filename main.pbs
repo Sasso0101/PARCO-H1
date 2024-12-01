@@ -1,0 +1,91 @@
+#!/bin/bash
+# Job name
+#PBS -N parco_assignment_1
+# Output files
+#PBS -o ./stdout.o
+#PBS -e ./stderr.e
+# Queue name
+#PBS -q short_cpuQ
+# Set the maximum wall time
+#PBS -l walltime=0:01:00
+# Number of nodes, cpus, mpi processors and amount of memory
+#PBS -l select=1:ncpus=96:mem=1gb
+
+# Import modules
+module load gcc91
+module load likwid-4.3.4
+module load python-3.10.14
+
+# Install python packages
+# pip3 install matplotlib pandas
+
+# Select the working directory
+cd /home/salvatore.andaloro/Assignment_1 || exit
+
+# Get the name of results directory from command line or use default value
+results_dir=${1:-results}
+
+# Create directories
+mkdir -p $results_dir/plots
+mkdir -p bin/
+
+declare -A seq
+seq=(["sequential"]="-O1 sequential.c" ["unrolled"]="-O1 -funroll-loops -march=native -fstrict-aliasing sequential.c" ["vectorized"]="-O1 -ftree-vectorize -march=native -fstrict-aliasing sequential.c" ["O3"]="-O3 -march=native sequential.c" ["cache_O1"]="-O1 cache_optimized.c" ["cache_unroll"]="-O1 -march=native -funroll-loops -fstrict-aliasing cache_optimized.c" ["cache_vect"]="-O1 -ftree-vectorize -march=native -fstrict-aliasing cache_optimized.c" ["cache_O3"]="-O3 -march=native cache_optimized.c")
+# Matrix sizes
+sizes=(64 128 256 512 1024 2048 4096)
+
+# Number of runs for each size
+declare -A runs
+runs=(["64"]=1000 ["128"]=500 ["256"]=250 ["512"]=125 ["1024"]=50 ["2048"]=5 ["4096"]=5)
+
+# Create csv file with headers
+echo "name,size,threads,sym_time,transp_time" > $results_dir/times.csv
+
+# Run sequential codes
+for code in "${!seq[@]}"
+do
+  printf 'Running %s\n' "$code"
+  # Compile code
+  gcc-9.1.0 ${seq[$code]} -o bin/$code
+  for size in "${sizes[@]}"
+  do
+    printf '%s... ' "$size"
+    # Run multiple times and save results
+    for (( j=0 ; j<${runs[$size]}; j++ ))
+    do
+      echo "$code,$size,1,$(./bin/"$code" "$size")"
+    done >> $results_dir/times.csv 2> /dev/null
+  done
+  printf '\n'
+done
+
+# Run OpenMP codes
+declare -A omp
+omp=(["omp_O3"]="-O3 -march=native -fopenmp openmp.c")
+# omp=(["omp_O1"]="-O1 -march=native -fopenmp openmp.c" ["omp_O3"]="-O3 -march=native -fopenmp openmp.c")
+threads=(1 2 4 8 16 32 64 96)
+
+for code in "${!omp[@]}"
+do
+  printf 'Running %s\n' "$code"
+  # Compile code
+  gcc-9.1.0 ${omp[$code]} -o bin/$code
+  for size in "${sizes[@]}"
+  do
+    printf '%s... ' "$size"
+
+    for t in "${threads[@]}"
+    do
+      export OMP_NUM_THREADS=$t
+      for (( j=0; j<${runs[$size]}; j++ ))
+      do
+        # Run code and save results in new line
+        echo "$code,$size,$t,$(./bin/"$code" "$size")"
+      done
+    done >> $results_dir/times.csv 2> /dev/null
+  done
+  printf '\n'
+done
+
+# Collect data and draw plots
+python3 main.py $results_dir
