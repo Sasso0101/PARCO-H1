@@ -32,15 +32,15 @@ mkdir -p results/
 
 echo "--- PARCO-H1 - Salvatore Andaloro ---"
 
-printf "Printing the result of the sequential code to verify correctness...\n"
+printf "Printing the result of the sequential code to verify correctness...\nCommand: gcc-9.1.0 sequential.c -o bin/sequential\n"
 gcc-9.1.0 sequential.c -o bin/sequential
 ./bin/sequential 3 verbose
 
-printf '\nPrinting the result of the cache-optimized code to verify correctness...\n'
+printf '\nPrinting the result of the cache-optimized code to verify correctness...\nCommand: gcc-9.1.0 cache_optimized.c -o bin/cache_optimized\n'
 gcc-9.1.0 cache_optimized.c -o bin/cache_optimized
 ./bin/cache_optimized 3 verbose
 
-printf '\nPrinting the result of the OpenMP code to verify correctness...\n'
+printf '\nPrinting the result of the OpenMP code to verify correctness...\nCommand: gcc-9.1.0 openmp.c -fopenmp -o bin/openmp\n'
 gcc-9.1.0 openmp.c -fopenmp -o bin/openmp
 ./bin/openmp 3 verbose
 
@@ -62,7 +62,7 @@ sizes=(64 128 256 512 1024 2048 4096)
 for code in "${!seq[@]}"
 do
   printf 'Running %s...\n' "$code"
-  printf 'Command: gcc-9.1.0 %s)\n' "${seq[$code]}"
+  printf 'Command: gcc-9.1.0 %s)\nSizes: ' "${seq[$code]}"
   # Compile code
   gcc-9.1.0 ${seq[$code]} -o bin/$code
   # Run code for each size
@@ -86,7 +86,7 @@ threads=(1 2 4 8 16 32 64)
 for code in "${!omp[@]}"
 do
   printf 'Running %s...\n' "$code"
-  printf 'Command: gcc-9.1.0 %s)\n' "${omp[$code]}"
+  printf 'Command: gcc-9.1.0 %s)\nSizes: ' "${omp[$code]}"
   # Compile code
   gcc-9.1.0 ${omp[$code]} -o bin/$code
   # Run code for each size
