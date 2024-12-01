@@ -39,7 +39,7 @@ The script performs the following operations:
 3. runs the sequential and the cache-optimized implementations with the flag configurations that are presented in the report;
 4. runs the parallel implementation with 1, 2, 4, 8, 16, 32 and 64 cores.
 
-The data given by the runs is saved to the `results.csv` file (located in the `results` directory inside the project's directory). The csv file will contain a line for each run. The columns of the csv file are:
+The data obtained during the runs is saved to the `results.csv` file (located in the `results` directory inside the project's directory). The csv file will contain a line for each run. The columns of the csv file are:
 ```
 name - name of the run, as printed in the output file
 size - size of the matrix
