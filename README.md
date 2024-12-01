@@ -33,7 +33,7 @@ The PBS job will reserve a node with 64 cores and 10GB of memory. Once started, 
 The script performs the following operations:
 1. prints to the output file the original and transposed matrix for the sequential, cache-optimized and OpenMP code to verify their correctness;
 2. prints the system bandwidth given by `peak_bandwidth.c`(the code is run using 64 cores);
-3. runs the sequential and the cache-optimized one with the flag configurations that are presented in the report
+3. runs the sequential and the cache-optimized implementations with the flag configurations that are presented in the report
 4. runs the parallel implementation with 1, 2, 4, 8, 16, 32 and 64 cores.
 
 The data given by the runs is saved to the `results.csv` file (located in the `results` directory inside the project's directory). The csv file will contain a line for each run. The columns of the csv file are:
