@@ -3,10 +3,11 @@
 #include <omp.h>
 
 int main(int argc, char **argv) {
-  int size = 4096;
+  unsigned long long size = 4096;
   if (argc > 1) {
     size = strtol(argv[1], NULL, 10);
   }
+  size = size * size;
 
   float *a;
   double start, end;
@@ -17,15 +18,15 @@ int main(int argc, char **argv) {
   // Write some values to the array
   start = omp_get_wtime();
   #pragma omp parallel for simd
-  for (int i = 0; i < ARRAY_SIZE; i++) {
+  for (unsigned long long i = 0; i < size; i++) {
     a[i] = 42.0;
   }
   end = omp_get_wtime();
 
-  // Calculate and print the bandwidth
-  double bandwidth = (size * sizeof(float)) / (end - start) / 1e9;
   // Calculate and print the bandwidth using only one array
-  printf("%f\n", bandwidth);
+  printf("1,%f\n", end - start);
 
+  // Print some output to stderr to avoid the compiler optimizing the assignment away
+  fprintf(stderr, "%d", a[size-1]);
   return 0;
 }
