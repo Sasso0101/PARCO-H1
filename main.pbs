@@ -1,91 +1,111 @@
 #!/bin/bash
 # Job name
-#PBS -N parco_assignment_1
+#PBS -N PARCO_H1
 # Output files
 #PBS -o ./stdout.o
-#PBS -e ./stderr.e
 # Queue name
 #PBS -q short_cpuQ
 # Set the maximum wall time
-#PBS -l walltime=0:01:00
-# Number of nodes, cpus, mpi processors and amount of memory
-#PBS -l select=1:ncpus=96:mem=1gb
+#PBS -l walltime=0:05:00
+# Number of nodes, cores and memory
+#PBS -l select=1:ncpus=64:mem=10gb
 
 # Import modules
 module load gcc91
-module load likwid-4.3.4
-module load python-3.10.14
+# Print current folder
+echo "Current folder is $(pwd)"
 
-# Install python packages
-# pip3 install matplotlib pandas
+path=$PATH_TO_DIRECTORY
+runs=${RUNS:-1}
+
+# If path is empty, terminate script with error
+if [ -z "$path" ]; then
+  echo "Error: path to directory is missing"
+  exit 1
+fi
 
 # Select the working directory
-cd /home/salvatore.andaloro/Assignment_1 || exit
-
-# Get the name of results directory from command line or use default value
-results_dir=${1:-results}
+cd $path
 
 # Create directories
-mkdir -p $results_dir/plots
 mkdir -p bin/
+mkdir -p results/
 
+echo "--- PARCO-H1 - Salvatore Andaloro ---"
+
+printf "Printing the result of the sequential code to verify correctness...\n"
+gcc-9.1.0 sequential.c -o bin/sequential
+./bin/sequential 3 verbose
+
+printf '\nPrinting the result of the cache-optimized code to verify correctness...\n'
+gcc-9.1.0 cache_optimized.c -o bin/cache_optimized
+./bin/cache_optimized 3 verbose
+
+printf '\nPrinting the result of the OpenMP code to verify correctness...\n'
+gcc-9.1.0 openmp.c -fopenmp -o bin/openmp
+./bin/openmp 3 verbose
+
+gcc-9.1.0 peak_bandwidth.c -fopenmp -o bin/peak_bandwidth
+export OMP_NUM_THREADS=64
+bandwidth=$(./bin/peak_bandwidth 40000 verbose)
+printf '\nThe measured bandwidth of the system is %s GB/s.\n' "$bandwidth"
+
+printf '\nRunning the codes now... The results will be stored in results/times.csv.\n Refer to the README for more information.\n\n'
+
+echo "name,size,threads,sym_time,transp_time" > results/times.csv
+
+# Run sequential and cache-optimized code
 declare -A seq
-seq=(["sequential"]="-O1 sequential.c" ["unrolled"]="-O1 -funroll-loops -march=native -fstrict-aliasing sequential.c" ["vectorized"]="-O1 -ftree-vectorize -march=native -fstrict-aliasing sequential.c" ["O3"]="-O3 -march=native sequential.c" ["cache_O1"]="-O1 cache_optimized.c" ["cache_unroll"]="-O1 -march=native -funroll-loops -fstrict-aliasing cache_optimized.c" ["cache_vect"]="-O1 -ftree-vectorize -march=native -fstrict-aliasing cache_optimized.c" ["cache_O3"]="-O3 -march=native cache_optimized.c")
+seq=(["sequential"]="-O1 sequential.c" ["sequential_unrolled"]="-O1 -funroll-loops -march=native -fstrict-aliasing sequential.c" ["sequential_vectorized"]="-O1 -ftree-vectorize -march=native -fstrict-aliasing sequential.c" ["sequential_O3"]="-O3 -march=native sequential.c" ["cache_O1"]="-O1 cache_optimized.c" ["cache_unrolled"]="-O1 -march=native -funroll-loops -fstrict-aliasing cache_optimized.c" ["cache_vectorized"]="-O1 -ftree-vectorize -march=native -fstrict-aliasing cache_optimized.c" ["cache_O3"]="-O3 -march=native cache_optimized.c")
 # Matrix sizes
 sizes=(64 128 256 512 1024 2048 4096)
 
-# Number of runs for each size
-declare -A runs
-runs=(["64"]=1000 ["128"]=500 ["256"]=250 ["512"]=125 ["1024"]=50 ["2048"]=5 ["4096"]=5)
-
-# Create csv file with headers
-echo "name,size,threads,sym_time,transp_time" > $results_dir/times.csv
-
-# Run sequential codes
 for code in "${!seq[@]}"
 do
-  printf 'Running %s\n' "$code"
+  printf 'Running %s...\n' "$code"
+  printf 'Command: gcc-9.1.0 %s)\n' "${seq[$code]}"
   # Compile code
   gcc-9.1.0 ${seq[$code]} -o bin/$code
+  # Run code for each size
   for size in "${sizes[@]}"
   do
     printf '%s... ' "$size"
     # Run multiple times and save results
-    for (( j=0 ; j<${runs[$size]}; j++ ))
+    for (( j=0 ; j<$runs; j++ ))
     do
       echo "$code,$size,1,$(./bin/"$code" "$size")"
-    done >> $results_dir/times.csv 2> /dev/null
+    done >> results/times.csv 2> /dev/null
   done
-  printf '\n'
+  printf '\n\n'
 done
 
-# Run OpenMP codes
+# Run OpenMP code
 declare -A omp
-omp=(["omp_O3"]="-O3 -march=native -fopenmp openmp.c")
-# omp=(["omp_O1"]="-O1 -march=native -fopenmp openmp.c" ["omp_O3"]="-O3 -march=native -fopenmp openmp.c")
-threads=(1 2 4 8 16 32 64 96)
+omp=(["openmp_O3"]="-O3 -march=native -fopenmp openmp.c")
+threads=(1 2 4 8 16 32 64)
 
 for code in "${!omp[@]}"
 do
-  printf 'Running %s\n' "$code"
+  printf 'Running %s...\n' "$code"
+  printf 'Command: gcc-9.1.0 %s)\n' "${omp[$code]}"
   # Compile code
   gcc-9.1.0 ${omp[$code]} -o bin/$code
+  # Run code for each size
   for size in "${sizes[@]}"
   do
     printf '%s... ' "$size"
-
+    # Run for each thread
     for t in "${threads[@]}"
     do
       export OMP_NUM_THREADS=$t
-      for (( j=0; j<${runs[$size]}; j++ ))
+      for (( j=0; j<$runs; j++ ))
       do
         # Run code and save results in new line
         echo "$code,$size,$t,$(./bin/"$code" "$size")"
       done
-    done >> $results_dir/times.csv 2> /dev/null
+    done >> results/times.csv 2> /dev/null
   done
   printf '\n'
 done
 
-# Collect data and draw plots
-python3 main.py $results_dir
+printf '\n--- DONE! ---\n'

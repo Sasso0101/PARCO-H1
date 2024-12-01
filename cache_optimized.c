@@ -59,8 +59,12 @@ void divide_transpose(float **m, float **t, int size) {
 
 int main(int argc, char **argv) {
     int size = 4096;
+    int verbose = 0;
     if (argc > 1) {
         size = strtol(argv[1], NULL, 10);
+    }
+    if (argc > 2) {
+        verbose = 1;
     }
 
     float **m = (float **)malloc(size * sizeof(float *));
@@ -88,7 +92,12 @@ int main(int argc, char **argv) {
     long seconds = end.tv_sec - start.tv_sec;
     long nanoseconds = end.tv_nsec - start.tv_nsec;
     double elapsed = seconds + nanoseconds*1e-9;
-    printf("%.9f,", elapsed);
+    // Print wall time
+    if (verbose) {
+        printf("Time taken for the symmetry check: %.9fs\n", elapsed);
+    } else {
+        printf("%.9f,", elapsed);
+    }
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     // Compute blocked transpose
@@ -100,7 +109,16 @@ int main(int argc, char **argv) {
     elapsed = seconds + nanoseconds*1e-9;
 
     // Print wall time
-    printf("%.9f\n", elapsed);
+    if (verbose) {
+        printf("Time taken for matrix transposition: %.9fs\n", elapsed);
+        printf("- Input matrix -\n");
+        print_mat(m, size);
+        printf("- Transposed matrix -\n");
+        print_mat(t, size);
+    } else {
+        printf("%.9f\n", elapsed);
+    }
+
     // Print some output to stderr to avoid the compiler optimizing the transpose away
     fprintf(stderr, "%d", t[size-1][size-1]);
 

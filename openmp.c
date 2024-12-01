@@ -49,6 +49,7 @@ void blocked_transpose(float **m, float **t, int i1, int i2, int j1, int j2, int
     }
 }
 
+// Divide the matrix into blocks and transpose each block
 void divide_transpose(float **m, float **t, int size) {
     #pragma omp parallel for
     for (int i = 0; i < size; i += BLOCK_SIZE) {
@@ -60,10 +61,15 @@ void divide_transpose(float **m, float **t, int size) {
 
 int main(int argc, char **argv) {
     int size = 4096;
+    int verbose = 0;
     if (argc > 1) {
         size = strtol(argv[1], NULL, 10);
     }
+    if (argc > 2) {
+        verbose = 1;
+    }
 
+    // Allocate memory for the matrices
     float **m = (float **)malloc(size * sizeof(float *));
     float **t = (float **)malloc(size * sizeof(float *));
     for (int i = 0; i < size; i++) {
@@ -78,18 +84,32 @@ int main(int argc, char **argv) {
     start = omp_get_wtime();
     is_sym = check_sym(m, size);
     end = omp_get_wtime();
-    printf("%.9f,", end-start);
-    // Print some output to stderr to avoid the compiler optimizing the check away
-    fprintf(stderr, "%d", is_sym);
 
-    start = omp_get_wtime();
+    // Print wall time
+    if (verbose) {
+        printf("Time taken for the symmetry check: %.9fs\n", end-start);
+    } else {
+        // Print some output to stderr to avoid the compiler optimizing the check away
+        fprintf(stderr, "%d", is_sym);
+        printf("%.9f,", end-start);
+    }
+
     // Compute blocked transpose
+    start = omp_get_wtime();
     divide_transpose(m, t, size);
     end = omp_get_wtime();
 
-    printf("%.9f\n", end-start);
-    // Print some output to stderr to avoid the compiler optimizing the transpose away
-    fprintf(stderr, "%d", t[size-1][size-1]);
-
+    // Print wall time
+    if (verbose) {
+        printf("Time taken for matrix transposition: %.9fs\n", end-start);
+        printf("- Input matrix -\n");
+        print_mat(m, size);
+        printf("- Transposed matrix -\n");
+        print_mat(t, size);
+    } else {
+        // Print some output to stderr to avoid the compiler optimizing the transpose away
+        fprintf(stderr, "%d", t[size-1][size-1]);
+        printf("%.9f\n", end-start);
+    }
     return 0;
 }
