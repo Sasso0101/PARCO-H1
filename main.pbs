@@ -13,8 +13,6 @@
 
 # Import modules
 module load gcc91
-# Print current folder
-echo "Current folder is $(pwd)"
 
 path=$PATH_TO_DIRECTORY
 runs=${RUNS:-1}
